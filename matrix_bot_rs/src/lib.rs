@@ -40,7 +40,9 @@ impl Bot<'static> {
                 let candidate_words:Vec<_>=trimmed.split_whitespace().collect();
                 let mut most_matching: Option<(usize, usize)>=None;
                 for (command_i,command) in self.commands.iter().enumerate(){
-                    let name_words=command.name.split_whitespace();
+                    let all_names=[command.aliases,&[command.name]].concat();
+                    for name in all_names{
+                    let name_words=name.split_whitespace();
                     for (i,(candidate_word,name_word)) in candidate_words.iter().zip(name_words).enumerate(){
                         if *candidate_word!=name_word{
                             break
@@ -53,7 +55,7 @@ impl Bot<'static> {
                             most_matching=Some((i,command_i))
                         }
                        
-                    }
+                    }}
                 }
                 if let Some(index)=most_matching{
                     let to_run=&self.commands[index.1];
@@ -98,8 +100,9 @@ impl Bot<'static> {
         self.client.sync(SyncSettings::new()).await
     }
 }
-type AsyncFnPointer<Out> = fn(CallingContext, String) -> Pin<Box<dyn Future<Output = Out> + Send>>;
-
+pub type AsyncHandlerReturn<'a>=Pin<Box<dyn Future<Output = HandlerReturn>+Send+'a>>;
+pub type HandlerReturn=Result<(),CommandError>;
+pub type CommandHandler<'a>=fn(ctx: CallingContext,args: String)->AsyncHandlerReturn;
 pub enum CommandError {
     InternalError(String),
     ArgParseError(String),
@@ -110,7 +113,7 @@ pub struct Command<'a> {
     pub aliases: &'a [&'a str],
     pub arg_hints: &'a[CommandArgHint],
     pub power_level_required: usize,
-    pub handler: fn(ctx: CallingContext,args: String)->futures::future::BoxFuture<'static,Result<(),CommandError>>,
+    pub handler: CommandHandler<'a>,
 }
 pub struct CommandArgHint {
     pub name: String,
