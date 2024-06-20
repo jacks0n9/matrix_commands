@@ -1,0 +1,9 @@
+[package]
+name = "matrix_bot_rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures = "0.3.30"
+matrix-sdk = { version = "0.7.1", features = ["markdown"] }
+matrix_bot_rs_macros={path="../matrix_bot_rs_macros"}
