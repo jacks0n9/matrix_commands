@@ -103,9 +103,9 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
     let name = args.name.unwrap_or(og_ident.to_string());
     let aliases = args.aliases;
     let generated: TokenStream = quote! {
-        async fn #og_ident<'a>()->matrix_bot_rs::Command<'a>{
+        fn #og_ident<'a>()->matrix_bot_rs::Command<'a>{
             use matrix_bot_rs::CallingContext;
-            async fn handler(ctx: CallingContext<'_>,input: String)->Result<(),CommandError>{
+            fn handler(ctx: CallingContext<'_>,input: String)->Result<(),CommandError>{
                 #(#conversions)*
                 inner_fn(ctx,#(#handler_arg_names),*).await?;
                 #parsed
