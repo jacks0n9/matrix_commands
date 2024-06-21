@@ -16,10 +16,10 @@ pub struct Bot<'a> {
     pub command_prefix: String,
 }
 impl Bot<'static> {
-    pub fn new(client: matrix_sdk::Client, command_prefix: String) -> Self {
+    pub fn new(client: matrix_sdk::Client, command_prefix: String,commands: &'static [Command]) -> Self {
         Self {
             client,
-            commands: &[],
+            commands,
             command_prefix,
         }
     }
