@@ -112,7 +112,7 @@ pub enum CommandError {
 pub struct Command<'a> {
     pub name: &'a str,
     pub aliases: &'a [&'a str],
-    pub arg_hints: &'a[CommandArgHint],
+    pub arg_hints: Vec<CommandArgHint>,
     pub power_level_required: usize,
     pub handler: CommandHandler<'a>,
 }

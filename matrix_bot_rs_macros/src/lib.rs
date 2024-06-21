@@ -87,8 +87,8 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
         let description = arg_parameters.description;
         arg_hints.push(quote! {
             matrix_bot_rs::CommandArgHint{
-                name: #hint_name,
-                description: #description
+                name: #hint_name.to_string(),
+                description: #description.to_string()
             }
         });
 
@@ -118,7 +118,7 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
                 name: #name,
                 aliases: &[#(#aliases),*],
                 power_level_required: 0,
-                arg_hints: &[#(#arg_hints),*],
+                arg_hints: vec![#(#arg_hints),*],
                 handler:handler_pinned
             }
         }
