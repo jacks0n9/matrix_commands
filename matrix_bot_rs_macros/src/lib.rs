@@ -4,6 +4,8 @@ use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
 use syn::{parse_macro_input, FnArg, GenericArgument, Ident, ItemFn, LitStr, Pat, PathArguments, Type};
+/// Make a command handler into a command
+/// NOTE: If for an argument, you use a fully qualified path to Option, or a type alias for Option, you may not get as advanced type checking from this macro
 #[proc_macro_attribute]
 pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
     let attr_args = match NestedMeta::parse_meta_list(args.into()) {
@@ -28,6 +30,7 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
     let mut conversions = Vec::new();
     let mut handler_arg_names = Vec::new();
     let mut arg_hints = Vec::new();
+    let mut have_seen_optional=true;
     for arg in fn_args {
         let pat_type = match arg {
             FnArg::Typed(pat) => pat,
@@ -60,6 +63,12 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
             },
             _ => false,
         };
+        if have_seen_optional && !is_optional{
+            return "compile_error!(\"Required arguments may not come after optional arguments\")".parse().unwrap()
+        }
+        if is_optional{
+            have_seen_optional=true;
+        }
         println!("{is_optional}");
         let as_metas: Vec<_> = pat_type
             .attrs
