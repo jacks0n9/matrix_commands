@@ -38,7 +38,7 @@ impl Bot<'static> {
             }
             if let Some(trimmed)=og.content.body().strip_prefix(&prefix){
                 let candidate_words:Vec<_>=trimmed.split_whitespace().collect();
-                let mut most_matching: Option<(usize, usize)>=None;
+                let mut most_matching: Option<(usize, usize,&str)>=None;
                 for (command_i,command) in self.commands.iter().enumerate(){
                     let all_names=[command.aliases,&[command.name]].concat();
                     for name in all_names{
@@ -49,10 +49,10 @@ impl Bot<'static> {
                         }
                         if let Some(matching)=most_matching{
                             if matching.0>i{
-                                most_matching=Some((i,command_i))
+                                most_matching=Some((i,command_i,name))
                             }
                         }else{
-                            most_matching=Some((i,command_i))
+                            most_matching=Some((i,command_i,name))
                         }
                        
                     }}
@@ -61,7 +61,7 @@ impl Bot<'static> {
                     let to_run=&self.commands[index.1];
                     let command_outcome=(to_run.handler)(CallingContext{
                         client: &client_cloned,
-                    },String::from("elefeoefwrw")).await;
+                    },trimmed.strip_prefix(index.2).unwrap_or(trimmed).to_owned()).await;
                     if let Err(err)=command_outcome{
                         let to_send;
                         let member=match room.get_member(event.sender()).await{
@@ -122,4 +122,22 @@ pub struct CommandArgHint {
 }
 pub struct CallingContext<'a> {
     pub client: &'a matrix_sdk::Client,
+}
+
+pub trait TryFromStr
+where
+    Self: Sized,
+{
+    fn try_from_str(input: &str) -> Result<(Self, &str), String>;
+}
+impl TryFromStr for String {
+    fn try_from_str(input: &str) -> Result<(Self, &str), String> {
+        if let Some(index) = input.find(' ') {
+            let before_space = &input[..index];
+            let after_space = &input[index + 1..];
+            return Ok((before_space.to_owned(),after_space))
+        } else {
+            return Ok((input.to_string(),""));
+        }
+    }
 }
