@@ -20,6 +20,9 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
         }
     };
     let mut parsed = parse_macro_input!(cloned as ItemFn);
+    if parsed.sig.asyncness.is_none(){
+        return "compile_error!(\"Function must be async\")".parse().unwrap()
+    }
     let mut fn_args = parsed.sig.inputs.iter();
     fn_args.next();
     let mut conversions = Vec::new();
