@@ -8,7 +8,7 @@ use matrix_sdk::{
 use std::{
     future::Future,
     pin::Pin,
-    time::{self, SystemTime},
+    time::SystemTime,
 };
 pub struct Bot<'a> {
     client: matrix_sdk::Client,
@@ -138,6 +138,18 @@ impl TryFromStr for String {
             return Ok((before_space.to_owned(),after_space))
         } else {
             return Ok((input.to_string(),""));
+        }
+    }
+}
+
+impl<T: TryFromStr> TryFromStr for Option<T>{
+    fn try_from_str(input: &str) -> Result<(Self, &str), String> {
+        if input.is_empty(){
+            return Ok((None,input))
+        }
+        match T::try_from_str(input){
+            Ok(t)=>Ok((Some(t.0),t.1)),
+            Err(e)=>Err(e)
         }
     }
 }
