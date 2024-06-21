@@ -75,7 +75,8 @@ impl Bot<'static> {
                             }
                         };
                         if member.power_level()<to_run.power_level_required as i64{
-                            room.send(RoomMessageEventContent::text_markdown(format!("# You don't have enough power to run this command\nRequired power level: **{}**",to_run.power_level_required))).await;
+                            let _=room.send(RoomMessageEventContent::text_markdown(format!("# You don't have enough power to run this command\nRequired power level: **{}**",to_run.power_level_required))).await;
+                            return
                         }
                         match err{
                             CommandError::InternalError(e)=>{
