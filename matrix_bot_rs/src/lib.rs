@@ -11,9 +11,9 @@ use std::{
     time::SystemTime,
 };
 pub struct Bot<'a> {
-    client: matrix_sdk::Client,
-    commands: &'a [Command<'a>],
-    command_prefix: String,
+    pub client: matrix_sdk::Client,
+    pub commands: &'a [Command<'a>],
+    pub command_prefix: String,
 }
 impl Bot<'static> {
     pub fn new(client: matrix_sdk::Client, command_prefix: String) -> Self {
