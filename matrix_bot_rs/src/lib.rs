@@ -118,7 +118,7 @@ pub struct Command<'a> {
 }
 pub struct CommandArgHint {
     pub name: String,
-    pub description: Option<String>,
+    pub description: String
 }
 pub struct CallingContext<'a> {
     pub client: &'a matrix_sdk::Client,

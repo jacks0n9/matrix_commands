@@ -30,7 +30,7 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
     let mut conversions = Vec::new();
     let mut handler_arg_names = Vec::new();
     let mut arg_hints = Vec::new();
-    let mut have_seen_optional=true;
+    let mut have_seen_optional=false;
     for arg in fn_args {
         let pat_type = match arg {
             FnArg::Typed(pat) => pat,
