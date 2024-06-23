@@ -86,7 +86,7 @@ async fn handle_message_event(
     };
     let to_run = &commands[index.1];
     let command_outcome = (to_run.handler)(
-        CallingContext { client: &client },
+        CallingContext { client: &client,room: &room },
         trimmed.strip_prefix(&index.2).unwrap_or(trimmed).to_owned(),
     )
     .await;
@@ -149,6 +149,7 @@ pub struct CommandArgHint {
 }
 pub struct CallingContext<'a> {
     pub client: &'a matrix_sdk::Client,
+    pub room: &'a Room
 }
 
 pub trait TryFromStr
