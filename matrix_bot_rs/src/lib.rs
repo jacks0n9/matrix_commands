@@ -22,6 +22,7 @@ impl Bot<'static> {
         }
     }
     pub async fn run(self) -> Result<(), matrix_sdk::Error> {
+        // TODO: Make it so there aren't so many clones
         let start_time = SystemTime::now();
         let prefix = self.command_prefix.clone();
         let client_cloned = self.client.clone();
