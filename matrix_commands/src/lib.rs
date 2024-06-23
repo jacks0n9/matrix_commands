@@ -1,19 +1,41 @@
 pub use matrix_commands_macros::*;
 pub use matrix_sdk;
 use matrix_sdk::{
-    config::SyncSettings, room::RoomMember, ruma::{
+    config::SyncSettings,
+    room::RoomMember,
+    ruma::{
         api::client::message::send_message_event,
         events::{
+            reaction::ReactionEventContent,
+            relation::Annotation,
             room::message::{RoomMessageEventContent, SyncRoomMessageEvent},
             MessageLikeEventContent,
         },
-    }, Client, Room
+        EventId, OwnedEventId,
+    },
+    Client, Room,
 };
-use std::{future::Future, pin::Pin, time::SystemTime};
+use std::{
+    collections::HashMap,
+    future::Future,
+    pin::Pin,
+    sync::{Arc, Mutex},
+    time::SystemTime,
+};
 pub struct Bot {
     pub client: matrix_sdk::Client,
     pub commands: Vec<Command>,
     pub command_prefix: String,
+    state: SharedStateArc,
+}
+type SharedStateArc = Arc<Mutex<SharedState>>;
+struct SharedState{
+    buttons: HashMap<ButtonKey, Button>,
+}
+#[derive(Eq, Hash, PartialEq)]
+struct ButtonKey {
+    relates_to: OwnedEventId,
+    key: String,
 }
 impl Bot {
     pub async fn run(self) -> Result<(), matrix_sdk::Error> {
@@ -28,6 +50,7 @@ impl Bot {
                     self.command_prefix,
                     client,
                     self.commands.clone(),
+                    self.state,
                 )
                 .await;
             },
@@ -42,6 +65,7 @@ async fn handle_message_event(
     prefix: String,
     client: Client,
     commands: Vec<Command>,
+    state: SharedStateArc,
 ) {
     let og = match event.as_original() {
         Some(og) => og,
@@ -108,7 +132,8 @@ async fn handle_message_event(
         CallingContext {
             client: &client,
             room: &room,
-            caller: member
+            caller: member,
+            state,
         },
         argument_string.clone(),
     )
@@ -164,9 +189,10 @@ pub struct CommandArgHint {
 pub struct CallingContext<'a> {
     pub client: &'a matrix_sdk::Client,
     pub room: &'a Room,
-    pub caller: RoomMember
+    pub caller: RoomMember,
+    state: SharedStateArc,
 }
-
+pub struct Button {}
 impl CallingContext<'_> {
     pub async fn reply(
         &self,
@@ -181,7 +207,30 @@ impl CallingContext<'_> {
             ))
         })
     }
+    pub async fn add_button(
+        &self,
+        emoji: char,
+        event_id: &EventId,
+    ) -> Result<(), CommandError> {
+        let key = emoji.to_string();
+        self.room.send(ReactionEventContent::new(Annotation::new(
+            event_id.into(),
+            key.clone(),
+        )));
+        let button_key=ButtonKey {
+            key,
+            relates_to: event_id.into(),
+        };
+        let our_button=Button{};
+        self.state
+            .lock()
+            .map_err(|error| CommandError::InternalError(format!("Error locking mutex: {error}")))?
+            .buttons
+            .insert(button_key,our_button);
+        Ok(())
+    }
 }
+
 pub trait TryFromStr
 where
     Self: Sized,
