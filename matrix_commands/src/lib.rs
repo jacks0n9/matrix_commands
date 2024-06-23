@@ -1,15 +1,13 @@
 pub use matrix_commands_macros::*;
 pub use matrix_sdk;
 use matrix_sdk::{
-    config::SyncSettings,
-    ruma::{
+    config::SyncSettings, room::RoomMember, ruma::{
         api::client::message::send_message_event,
         events::{
             room::message::{RoomMessageEventContent, SyncRoomMessageEvent},
             MessageLikeEventContent,
         },
-    },
-    Client, Room,
+    }, Client, Room
 };
 use std::{future::Future, pin::Pin, time::SystemTime};
 pub struct Bot {
@@ -117,6 +115,7 @@ async fn handle_message_event(
         CallingContext {
             client: &client,
             room: &room,
+            caller: member
         },
         argument_string.clone(),
     )
@@ -172,6 +171,7 @@ pub struct CommandArgHint {
 pub struct CallingContext<'a> {
     pub client: &'a matrix_sdk::Client,
     pub room: &'a Room,
+    pub caller: RoomMember
 }
 
 impl CallingContext<'_> {

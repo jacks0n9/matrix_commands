@@ -1702,8 +1702,10 @@ name = "matrix_commands"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "log",
  "matrix-sdk",
  "matrix_commands_macros",
+ "serde_json",
 ]
 
 [[package]]
