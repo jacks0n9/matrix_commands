@@ -2,7 +2,7 @@ pub use matrix_bot_rs_macros::*;
 pub use matrix_sdk;
 use matrix_sdk::{
     config::SyncSettings,
-    ruma::events::room::message::{RoomMessageEventContent, SyncRoomMessageEvent},
+    ruma::{api::client::message::send_message_event, events::{room::message::{RoomMessageEventContent, SyncRoomMessageEvent}, MessageLikeEventContent}},
     Client, Room,
 };
 use std::{future::Future, pin::Pin, time::SystemTime};
@@ -152,6 +152,11 @@ pub struct CallingContext<'a> {
     pub room: &'a Room
 }
 
+impl CallingContext<'_>{
+    pub async fn reply(&self,content: impl MessageLikeEventContent)->Result<send_message_event::v3::Response,CommandError>{
+        self.room.send(content).await.map_err(|error|CommandError::InternalError(error.to_string()))
+    }
+}
 pub trait TryFromStr
 where
     Self: Sized,
