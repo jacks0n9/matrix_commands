@@ -94,6 +94,25 @@ async fn handle_message_event(
     };
     let to_run = &commands[index.1];
     let argument_string = &trimmed.strip_prefix(&index.2).unwrap_or(trimmed).to_owned();
+    let member = match room.get_member(event.sender()).await {
+        Ok(member_opt) => match member_opt {
+            Some(member) => member,
+            None => return,
+        },
+        Err(e) => {
+            log::warn!("Failed to get room member: {}", e);
+            return;
+        }
+    };
+    if member.power_level() < to_run.power_level_required as i64 {
+        let _ = room
+            .send(RoomMessageEventContent::text_markdown(format!(
+                "# You don't have enough power to run this command\nRequired power level: **{}**",
+                to_run.power_level_required
+            )))
+            .await;
+        return;
+    }
     let command_outcome = (to_run.handler)(
         CallingContext {
             client: &client,
@@ -104,20 +123,6 @@ async fn handle_message_event(
     .await;
     if let Err(err) = command_outcome {
         let to_send;
-        let member = match room.get_member(event.sender()).await {
-            Ok(member_opt) => match member_opt {
-                Some(member) => member,
-                None => return,
-            },
-            Err(e) => {
-                log::warn!("Failed to get room member: {}", e);
-                return;
-            }
-        };
-        if member.power_level() < to_run.power_level_required as i64 {
-            let _=room.send(RoomMessageEventContent::text_markdown(format!("# You don't have enough power to run this command\nRequired power level: **{}**",to_run.power_level_required))).await;
-            return;
-        }
         match err {
             CommandError::InternalError(e) => {
                 log::error!(
