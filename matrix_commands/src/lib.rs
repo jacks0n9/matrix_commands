@@ -154,7 +154,10 @@ pub struct CallingContext<'a> {
 
 impl CallingContext<'_>{
     pub async fn reply(&self,content: impl MessageLikeEventContent)->Result<send_message_event::v3::Response,CommandError>{
-        self.room.send(content).await.map_err(|error|CommandError::InternalError(error.to_string()))
+        let serialized=serde_json::to_string_pretty(&content).map_err(|error|CommandError::InternalError(error.to_string()))?;
+        self.room.send(content).await.map_err(|error|{
+            CommandError::InternalError(format!("Error replying to a message: {}. Message content: {}",error,serialized))
+        })
     }
 }
 pub trait TryFromStr
