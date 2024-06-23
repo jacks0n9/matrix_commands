@@ -72,7 +72,7 @@ async fn handle_message_event(
                 }
                 if let Some(ref matching) = most_matching {
                     if matching.0 > i {
-                        most_matching = Some((i, command_i, name.clone()))
+                        most_matching = Some((i, command_i, format!("{} {}",matching.2,name.clone())))
                     }
                 } else {
                     most_matching = Some((i, command_i, name.clone()))
@@ -159,6 +159,7 @@ where
 }
 impl TryFromStr for String {
     fn try_from_str(input: &str) -> Result<(Self, &str), String> {
+        let input=input.trim();
         if let Some(index) = input.find(' ') {
             let before_space = &input[..index];
             let after_space = &input[index + 1..];
@@ -168,6 +169,7 @@ impl TryFromStr for String {
         }
     }
 }
+
 
 impl<T: TryFromStr> TryFromStr for Option<T> {
     fn try_from_str(input: &str) -> Result<(Self, &str), String> {

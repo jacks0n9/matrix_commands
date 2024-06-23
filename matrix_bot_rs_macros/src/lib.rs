@@ -103,7 +103,7 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
     let name = args.name.unwrap_or(og_ident.to_string());
     let aliases = args.aliases;
     let generated: TokenStream = quote! {
-        fn #og_ident<'a>()->matrix_bot_rs::Command<'a>{
+        fn #og_ident()->matrix_bot_rs::Command{
             use matrix_bot_rs::CallingContext;
             async fn handler(ctx: CallingContext<'_>,input: String)->Result<(),CommandError>{
                 #(#conversions)*
@@ -115,8 +115,8 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
                 Box::pin(handler(ctx,args))
             }
             matrix_bot_rs::Command{
-                name: #name,
-                aliases: &[#(#aliases),*],
+                name: #name.to_string(),
+                aliases: vec![#(#aliases),*],
                 power_level_required: 0,
                 arg_hints: vec![#(#arg_hints),*],
                 handler:handler_pinned
