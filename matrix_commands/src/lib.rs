@@ -16,13 +16,6 @@ pub struct Bot {
     pub command_prefix: String,
 }
 impl Bot {
-    pub fn new(client: matrix_sdk::Client, command_prefix: String, commands: Vec<Command>) -> Self {
-        Self {
-            client,
-            commands,
-            command_prefix,
-        }
-    }
     pub async fn run(self) -> Result<(), matrix_sdk::Error> {
         // TODO: Make it so there aren't so many clones
         let start_time = SystemTime::now();
