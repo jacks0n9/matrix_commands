@@ -2,7 +2,13 @@ pub use matrix_commands_macros::*;
 pub use matrix_sdk;
 use matrix_sdk::{
     config::SyncSettings,
-    ruma::{api::client::message::send_message_event, events::{room::message::{RoomMessageEventContent, SyncRoomMessageEvent}, MessageLikeEventContent}},
+    ruma::{
+        api::client::message::send_message_event,
+        events::{
+            room::message::{RoomMessageEventContent, SyncRoomMessageEvent},
+            MessageLikeEventContent,
+        },
+    },
     Client, Room,
 };
 use std::{future::Future, pin::Pin, time::SystemTime};
@@ -31,7 +37,8 @@ impl Bot {
                     self.command_prefix,
                     client,
                     self.commands.clone(),
-                ).await;
+                )
+                .await;
             },
         );
         self.client.sync(SyncSettings::default()).await
@@ -72,7 +79,8 @@ async fn handle_message_event(
                 }
                 if let Some(ref matching) = most_matching {
                     if matching.0 > i {
-                        most_matching = Some((i, command_i, format!("{} {}",matching.2,name.clone())))
+                        most_matching =
+                            Some((i, command_i, format!("{} {}", matching.2, name.clone())))
                     }
                 } else {
                     most_matching = Some((i, command_i, name.clone()))
@@ -85,9 +93,13 @@ async fn handle_message_event(
         None => return,
     };
     let to_run = &commands[index.1];
+    let argument_string = &trimmed.strip_prefix(&index.2).unwrap_or(trimmed).to_owned();
     let command_outcome = (to_run.handler)(
-        CallingContext { client: &client,room: &room },
-        trimmed.strip_prefix(&index.2).unwrap_or(trimmed).to_owned(),
+        CallingContext {
+            client: &client,
+            room: &room,
+        },
+        argument_string.clone(),
     )
     .await;
     if let Err(err) = command_outcome {
@@ -98,7 +110,7 @@ async fn handle_message_event(
                 None => return,
             },
             Err(e) => {
-                eprintln!("{e}");
+                log::warn!("Failed to get room member: {}", e);
                 return;
             }
         };
@@ -108,7 +120,12 @@ async fn handle_message_event(
         }
         match err {
             CommandError::InternalError(e) => {
-                eprintln!("{e}");
+                log::error!(
+                    "Internal error running command: {}. Command name: {}. Arguments passed: {}",
+                    e,
+                    to_run.name,
+                    argument_string
+                );
                 to_send = Some(RoomMessageEventContent::text_markdown(format!(
                     "# Internal error\nBot admin has been notified"
                 )));
@@ -121,7 +138,7 @@ async fn handle_message_event(
         }
         if let Some(content) = to_send {
             if let Err(e) = room.send(content).await {
-                eprint!("{e}");
+                log::warn!("Error sending message with content: {e}.");
             }
         }
     }
@@ -149,14 +166,21 @@ pub struct CommandArgHint {
 }
 pub struct CallingContext<'a> {
     pub client: &'a matrix_sdk::Client,
-    pub room: &'a Room
+    pub room: &'a Room,
 }
 
-impl CallingContext<'_>{
-    pub async fn reply(&self,content: impl MessageLikeEventContent)->Result<send_message_event::v3::Response,CommandError>{
-        let serialized=serde_json::to_string_pretty(&content).map_err(|error|CommandError::InternalError(error.to_string()))?;
-        self.room.send(content).await.map_err(|error|{
-            CommandError::InternalError(format!("Error replying to a message: {}. Message content: {}",error,serialized))
+impl CallingContext<'_> {
+    pub async fn reply(
+        &self,
+        content: impl MessageLikeEventContent,
+    ) -> Result<send_message_event::v3::Response, CommandError> {
+        let serialized = serde_json::to_string_pretty(&content)
+            .map_err(|error| CommandError::InternalError(error.to_string()))?;
+        self.room.send(content).await.map_err(|error| {
+            CommandError::InternalError(format!(
+                "Error replying to a message: {}. Message content: {}",
+                error, serialized
+            ))
         })
     }
 }
@@ -168,7 +192,7 @@ where
 }
 impl TryFromStr for String {
     fn try_from_str(input: &str) -> Result<(Self, &str), String> {
-        let input=input.trim();
+        let input = input.trim();
         if let Some(index) = input.find(' ') {
             let before_space = &input[..index];
             let after_space = &input[index + 1..];
@@ -178,7 +202,6 @@ impl TryFromStr for String {
         }
     }
 }
-
 
 impl<T: TryFromStr> TryFromStr for Option<T> {
     fn try_from_str(input: &str) -> Result<(Self, &str), String> {
