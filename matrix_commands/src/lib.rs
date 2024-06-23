@@ -1,4 +1,4 @@
-pub use matrix_bot_rs_macros::*;
+pub use matrix_commands_macros::*;
 pub use matrix_sdk;
 use matrix_sdk::{
     config::SyncSettings,

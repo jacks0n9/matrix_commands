@@ -86,14 +86,14 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
         let hint_name = arg_parameters.name.unwrap_or(name.to_string());
         let description = arg_parameters.description;
         arg_hints.push(quote! {
-            matrix_bot_rs::CommandArgHint{
+            matrix_commands::CommandArgHint{
                 name: #hint_name.to_string(),
                 description: #description.to_string()
             }
         });
 
         let conversion = quote! {
-            let (#name,input)=<#actual_type as matrix_bot_rs::TryFromStr>::try_from_str(&input).map_err(|e|CommandError::ArgParseError(e))?;
+            let (#name,input)=<#actual_type as matrix_commands::TryFromStr>::try_from_str(&input).map_err(|e|CommandError::ArgParseError(e))?;
         };
         conversions.push(conversion);
     }
@@ -103,18 +103,18 @@ pub fn bot_command(args: TokenStream, code: TokenStream) -> TokenStream {
     let name = args.name.unwrap_or(og_ident.to_string());
     let aliases = args.aliases;
     let generated: TokenStream = quote! {
-        fn #og_ident()->matrix_bot_rs::Command{
-            use matrix_bot_rs::CallingContext;
+        fn #og_ident()->matrix_commands::Command{
+            use matrix_commands::CallingContext;
             async fn handler(ctx: CallingContext<'_>,input: String)->Result<(),CommandError>{
                 #(#conversions)*
                 inner_fn(ctx,#(#handler_arg_names),*).await?;
                 #parsed
                 Ok(())
             }
-            fn handler_pinned(ctx: CallingContext,args: String)->matrix_bot_rs::AsyncHandlerReturn{
+            fn handler_pinned(ctx: CallingContext,args: String)->matrix_commands::AsyncHandlerReturn{
                 Box::pin(handler(ctx,args))
             }
-            matrix_bot_rs::Command{
+            matrix_commands::Command{
                 name: #name.to_string(),
                 aliases: vec![#(#aliases),*],
                 power_level_required: 0,

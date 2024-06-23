@@ -1698,16 +1698,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "matrix_bot_rs"
+name = "matrix_commands"
 version = "0.1.0"
 dependencies = [
  "futures",
  "matrix-sdk",
- "matrix_bot_rs_macros",
+ "matrix_commands_macros",
 ]
 
 [[package]]
-name = "matrix_bot_rs_macros"
+name = "matrix_commands_macros"
 version = "0.1.0"
 dependencies = [
  "darling",
